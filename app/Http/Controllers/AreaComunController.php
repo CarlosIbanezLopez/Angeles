@@ -1,93 +1,141 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
 use App\Models\Bitacora;
 use App\Models\Edificio;
-use App\Models\AreaComun;
+use App\Models\Areacomun;
+use App\Models\Inventario;
 
-class AreaComunController extends Controller
+use Illuminate\Http\Request;
+
+class AreacomunController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function index()
     {
-        $areas_comunes = AreaComun::paginate(5);
-        //dd($areas_comunes);
-        return view('areas_comunes.index', compact('areas_comunes'));
+        $areacomuns = Areacomun::orderByDesc('id')->paginate(5);
+        return view('areacomuns.index', compact('areacomuns'));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function create()
     {
         $edificios = Edificio::get();
-        return view('areas_comunes.create', compact('edificios'));
+        $inventarios = Inventario::get();
+        return view('areacomuns.create', compact('edificios','inventarios'));
     }
 
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function store(Request $request)
     {
         $dataValidated = $request->validate([
-            'id_edif' => 'required|exists:edificios,id',
-            'id' => 'required|unique:areas_comunes,id',
-            //'id' => 'required|notexists:areas_comunes,id',
-            //'id_edif' => 'required|id_edif|unique:edificios,id',
-            //'id' => 'required|unique:areas_comunes,id',
-            //'id_edif' => 'required|exists:edificios,id',
-            //'id' => 'required|integer|areas_comunes,id',
-            'nombre' => 'required|max:50',
-            'precio_hora' => 'required|numeric',
-            'descripcion' => 'nullable|max:50',
+            'nombre' => 'required|unique:areacomuns,nombre',
+            'precio' => 'required|numeric',
+            'descripcion' => 'required|max:50',
+            'edificio_id' => 'required|exists:edificios,id',
+            'inventario_id.*' => 'string',
+            'inventario_id' => 'required|array',
         ]);
 
-        
-        
-        AreaComun::create($dataValidated);
-        
+        $areacomun = Areacomun::create($dataValidated);
+        $areacomun->inventarios()->attach($request->input('inventario_id',[]));
+
         Bitacora::create([
-            'tabla' => 'areas_comunes',
+            'tabla' => 'areacomuns',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'id_edif='.$request->id_edif.'id='.$request->id
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
-        return redirect('/areas-comunes')->with('message', 'Area comun agregada correctamente');
+        return redirect('/areacomuns')->with('message', 'Area comun agregado correctamente');
     }
 
-    public function edit(AreaComun $area_comun)
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
     {
-        return view('areas_comunes', compact('area_comun'));
+        //
     }
 
-    public function update(Request $request, AreaComun $area_comun)
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Areacomun $areacomun)
+    {
+        $edificios = Edificio::get();
+        $inventarios = Inventario::get();
+        return view('areacomuns.edit', compact('areacomun','edificios','inventarios'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Areacomun $areacomun)
     {
         $dataValidated = $request->validate([
-            'id_edif' => 'required|exists:edificios,id',
-            'id' => ['required','numeric','unique:areas_comunes,id_edif,NULL,id_edif,id,NULL,id'],
-            'nombre' => 'required|max:50',
-            'precio_hora' => 'required|numeric',
-            'descripcion' => 'nullable|max:50',
+            'nombre' => 'required|unique:areacomuns,nombre,'.$areacomun->nombre.',nombre',
+            'precio' => 'required|numeric',
+            'descripcion' => 'required|max:50',
+            'edificio_id' => 'required|exists:edificios,id',
+            'inventario_id.*' => 'string',
+            'inventario_id' => 'required|array',
+
         ]);
-        
+
         Bitacora::create([
-            'tabla' => 'areas_comunes',
+            'tabla' => 'areacomuns',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($area_comun)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
+        $areacomun->inventarios()->sync($request->input('inventario_id',[]));
 
-        $area_comun->update($dataValidated);
-        return redirect('/areas-comunes')->with('message', 'Area comun actualizada correctamente');
+        $areacomun->update($dataValidated);
+        return redirect('/areacomuns')->with('message', 'Area comun actualizado correctamente');
     }
 
-    public function destroy(AreaComun $area_comun)
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Areacomun $areacomun)
     {
         Bitacora::create([
-            'tabla' => 'areas_comunes',
+            'tabla' => 'areacomuns',
             'accion' => 'D',
             'id_usuario' => auth()->user()->id,
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($area_comun)))
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($areacomun)))
         ]);
+        $areacomun->inventarios()->detach();
 
-        $area_comun->delete();
-        
-        return redirect('/areas-comunes')->with('message', 'Area comun eliminada correctamente');
+        $areacomun->delete();
+
+        return redirect('/areacomuns')->with('message', 'Area comun eliminado correctamente');
     }
 }

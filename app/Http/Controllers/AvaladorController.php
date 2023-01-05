@@ -31,14 +31,14 @@ class AvaladorController extends Controller
             'email' => 'nullable|unique:avaladores,email|max:255',
             'direccion' => 'required|max:100'
         ]);
-        
+
         Avalador::create($dataValidated);
-        
+
         Bitacora::create([
             'tabla' => 'avaladores',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'ci='.$request->ci
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
         return redirect('/avaladores')->with('message', 'Avalador agregado correctamente');
@@ -61,13 +61,13 @@ class AvaladorController extends Controller
             'email' => 'nullable|max:255|unique:avaladores,email,'.$avalador->ci.',ci',
             'direccion' => 'required|max:100'
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'avaladores',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($avalador)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
 
         $avalador->update($dataValidated);
         return redirect('/avaladores')->with('message', 'Avalador actualizado correctamente');
@@ -83,7 +83,7 @@ class AvaladorController extends Controller
         ]);
 
         $avalador->delete();
-        
+
         return redirect('/avaladores')->with('message', 'Avalador eliminado correctamente');
     }
 }

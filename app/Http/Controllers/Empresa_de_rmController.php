@@ -8,7 +8,7 @@ use App\Models\Empresa_de_rm;
 
 class Empresa_de_rmController extends Controller
 {
-    
+
     public function index()
     {
         //$empresas_de_rm = Empresa_de_rm::latest()->paginate(5); //necesita created_at en la tabla
@@ -30,14 +30,14 @@ class Empresa_de_rmController extends Controller
             'telefono' => 'required|numeric|digits_between:1,9',
             'email' => 'nullable|max:255|unique:empresas_de_rm,email'
         ]);
-        
+
         Empresa_de_rm::create($dataValidated);
-        
+
         Bitacora::create([
             'tabla' => 'empresas_de_rm',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'id='.Empresa_de_rm::max('id')
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
         return redirect('/empresas-de-rm')->with('message', 'Empresa de reparación o mantenimiento agregada correctamente');
@@ -57,13 +57,13 @@ class Empresa_de_rmController extends Controller
             'telefono' => 'required|numeric|digits_between:1,9',
             'email' => 'nullable|max:255|unique:empresas_de_rm,email,'.$empresa_de_rm->id.',id'
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'empresas_de_rm',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($empresa_de_rm)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
 
         $empresa_de_rm->update($dataValidated);
         //Empresa_de_rm::where('id', $empresa_de_rm->id)->update($dataValidated);
@@ -80,7 +80,7 @@ class Empresa_de_rmController extends Controller
         ]);
 
         $empresa_de_rm->delete();
-        
+
         return redirect('/empresas-de-rm')->with('message', 'Empresa de reparación o mantenimiento eliminada correctamente');
     }
 }

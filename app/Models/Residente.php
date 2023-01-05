@@ -24,4 +24,8 @@ class Residente extends Model
         'telefono',
         'email',
     ];
+    public function contrato()
+    {
+        return $this->belongsTo(Contrato::class, 'departamento_id');
+    }
 }

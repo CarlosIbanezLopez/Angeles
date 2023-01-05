@@ -27,4 +27,8 @@ class Avalador extends Model
         'email',
         'direccion'
     ];
+    public function contrato()
+    {
+        return $this->belongsTo(Contrato::class);
+    }
 }

@@ -44,14 +44,14 @@ class ProveedoreController extends Controller
             'direccion' => 'nullable|max:100',
             'email' => 'nullable|unique:proveedores,email|max:255',
         ]);
-        
+
         Proveedore::create($dataValidated);
-        
+
         Bitacora::create([
             'tabla' => 'proveedores',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'id='.Proveedore::max('id')
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
         return redirect('/proveedores')->with('message', 'Proveedor agregado correctamente');
@@ -85,18 +85,18 @@ class ProveedoreController extends Controller
     {
         $dataValidated = $request->validate([
             'nombre' => 'required|max:50',
-            'telefono' => 'required|numeric|digits_between:1,9',    
+            'telefono' => 'required|numeric|digits_between:1,9',
             'ciudad' => 'required|in:PA,BE,LP,OR,CB,SC,PO,CH,TA',
             'direccion' => 'nullable|max:100',
             'email' => 'nullable|max:255|unique:proveedores,email,'.$proveedore->id.',id'
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'proveedores',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($proveedore)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
 
         $proveedore->update($dataValidated);
         return redirect('/proveedores')->with('message', 'Proveedor actualizado correctamente');
@@ -118,7 +118,7 @@ class ProveedoreController extends Controller
         ]);
 
         $proveedore->delete();
-        
+
         return redirect('/proveedores')->with('message', 'Proveedor eliminado correctamente');
     }
 }
