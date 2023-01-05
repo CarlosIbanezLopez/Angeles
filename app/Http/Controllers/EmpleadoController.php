@@ -23,6 +23,7 @@ class EmpleadoController extends Controller
 
     public function store(Request $request)
     {
+
         $dataValidated = $request->validate([
             'ci' => 'required|numeric|unique:empleados,ci|digits_between:1,9',
             'cargo' => 'required|max:50',
@@ -35,14 +36,14 @@ class EmpleadoController extends Controller
             'direccion' => 'required|max:100',
             'id_edif' => 'required|exists:edificios,id'
         ]);
-        
+
         Empleado::create($dataValidated);
-        
+
         Bitacora::create([
             'tabla' => 'empleados',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'ci='.$request->ci
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
         return redirect('/empleados')->with('message', 'Empleado agregado correctamente');
@@ -68,13 +69,13 @@ class EmpleadoController extends Controller
             'direccion' => 'required|max:100',
             'id_edif' => 'required|exists:edificios,id'
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'empleados',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($empleado)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
 
         $empleado->update($dataValidated);
         return redirect('/empleados')->with('message', 'Empleado actualizado correctamente');
@@ -90,7 +91,7 @@ class EmpleadoController extends Controller
         ]);
 
         $empleado->delete();
-        
+
         return redirect('/empleados')->with('message', 'Empleado eliminado correctamente');
     }
 }

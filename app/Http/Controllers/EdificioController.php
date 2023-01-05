@@ -27,14 +27,14 @@ class EdificioController extends Controller
             'direccion' => 'required|max:100',
             'telefono' => 'required|numeric|digits_between:1,9',
         ]);
-        
+
         Edificio::create($dataValidated);
-        
+
         Bitacora::create([
             'tabla' => 'edificios',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'id='.Edificio::max('id')
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
         return redirect('/edificios')->with('message', 'Edificio agregado correctamente');
@@ -53,13 +53,13 @@ class EdificioController extends Controller
             'direccion' => 'required|max:100',
             'telefono' => 'required|numeric|digits_between:1,9',
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'edificios',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($edificio)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
 
         $edificio->update($dataValidated);
         return redirect('/edificios')->with('message', 'Edificio actualizado correctamente');
@@ -75,9 +75,9 @@ class EdificioController extends Controller
         ]);
 
         $edificio->delete();
-        
+
         return redirect('/edificios')->with('message', 'Edificio eliminado correctamente');
     }
 
-    
+
 }

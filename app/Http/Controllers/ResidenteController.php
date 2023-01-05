@@ -32,14 +32,14 @@ class ResidenteController extends Controller
             'telefono' => 'required|numeric|digits_between:1,9',
             'email' => 'nullable|unique:residentes,email|max:255',
         ]);
-        
+
         Residente::create($dataValidated);
-        
+
         Bitacora::create([
             'tabla' => 'residentes',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'id='.Residente::max('id')
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
         return redirect('/residentes')->with('message', 'Residente agregado correctamente');
@@ -63,13 +63,13 @@ class ResidenteController extends Controller
             'telefono' => 'required|numeric|digits_between:1,9',
             'email' => 'nullable|max:255|unique:residentes,email,'.$residente->ci.',ci',
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'residentes',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($residente)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
 
         $residente->update($dataValidated);
         return redirect('/residentes')->with('message', 'Residente actualizado correctamente');
@@ -85,7 +85,7 @@ class ResidenteController extends Controller
         ]);
 
         $residente->delete();
-        
+
         return redirect('/residentes')->with('message', 'Residente eliminado correctamente');
     }
 }

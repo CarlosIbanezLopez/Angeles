@@ -14,4 +14,9 @@ class Marca extends Model
     protected $fillable = [
         'nombre',
     ];
+    public function muebles()
+    {
+        return $this->belongsToMany(Mueble::class);
+        
+    }
 }

@@ -16,7 +16,7 @@ class MarcaController extends Controller
     public function index()
     {
         $marcas = Marca::orderByDesc('id')->paginate(5);
-        return view('marcas.index', compact('marcas'));      
+        return view('marcas.index', compact('marcas'));
     }
 
     /**
@@ -40,14 +40,14 @@ class MarcaController extends Controller
         $dataValidated = $request->validate([
             'nombre' => 'required|max:50',
         ]);
-        
+
         Marca::create($dataValidated);
-        
+
         Bitacora::create([
             'tabla' => 'marcas',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'id='.Marca::max('id')
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
         return redirect('/marcas')->with('message', 'Marca agregado correctamente');
@@ -82,13 +82,13 @@ class MarcaController extends Controller
         $dataValidated = $request->validate([
             'nombre' => 'required|max:50',
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'marcas',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($marca)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
 
         $marca->update($dataValidated);
         return redirect('/marcas')->with('message', 'Marca actualizado correctamente');
@@ -110,7 +110,7 @@ class MarcaController extends Controller
         ]);
 
         $marca->delete();
-        
+
         return redirect('/marcas')->with('message', 'Marca eliminado correctamente');
     }
 }

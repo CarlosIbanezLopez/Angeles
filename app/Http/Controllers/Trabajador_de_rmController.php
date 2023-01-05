@@ -31,14 +31,14 @@ class Trabajador_de_rmController extends Controller
             'telefono' => 'required|numeric|digits_between:1,9',
             'email' => 'nullable|unique:trabajadores_de_rm,email|max:255'
         ]);
-        
+
         Trabajador_de_rm::create($dataValidated);
-        
+
         Bitacora::create([
             'tabla' => 'trabajadores_de_rm',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'ci='.$request->ci
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
 
         return redirect('/trabajadores-de-rm')->with('message', 'Trabajador de reparación o mantenimiento agregado correctamente');
@@ -61,13 +61,13 @@ class Trabajador_de_rmController extends Controller
             'telefono' => 'required|numeric|digits_between:1,9',
             'email' => 'nullable|max:255|unique:trabajadores_de_rm,email,'.$trabajador_de_rm->ci.',ci',
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'trabajadores_de_rm',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
             'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($trabajador_de_rm)))
-        ]); 
+        ]);
 
         $trabajador_de_rm->update($dataValidated);
         return redirect('/trabajadores-de-rm')->with('message', 'Trabajador de reparación o mantenimiento actualizado correctamente');
@@ -83,7 +83,7 @@ class Trabajador_de_rmController extends Controller
         ]);
 
         $trabajador_de_rm->delete();
-        
+
         return redirect('/trabajadores-de-rm')->with('message', 'Trabajador de reparación o mantenimiento eliminado correctamente');
     }
 }

@@ -16,7 +16,7 @@ class CategoriaController extends Controller
     public function index()
     {
         $categorias = Categoria::orderByDesc('id')->paginate(5);
-        return view('categorias.index', compact('categorias'));    
+        return view('categorias.index', compact('categorias'));
     }
 
     /**
@@ -41,16 +41,15 @@ class CategoriaController extends Controller
             'nombre' => 'required|max:50',
             'descripcion' => 'nullable|max:50',
         ]);
-        
+
         Categoria::create($dataValidated);
-        
-        Bitacora::create([  
+
+        Bitacora::create([
             'tabla' => 'categorias',
             'accion' => 'I',
             'id_usuario' => auth()->user()->id,
-            'datos' => 'id='.Categoria::max('id')
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
         ]);
-
         return redirect('/categorias')->with('message', 'Categoria agregado correctamente');
     }
 
@@ -84,13 +83,13 @@ class CategoriaController extends Controller
             'nombre' => 'required|max:50',
             'descripcion' => 'nullable|max:50',
         ]);
-        
+
         Bitacora::create([
             'tabla' => 'categorias',
             'id_usuario' => auth()->user()->id,
             'accion' => 'U',
-            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($categoria)))
-        ]); 
+            'datos' => str_replace(':','=',str_replace(['{','}','"'], '', json_encode($dataValidated)))
+        ]);
 
         $categoria->update($dataValidated);
         return redirect('/categorias')->with('message', 'Categoria actualizado correctamente');
@@ -112,7 +111,7 @@ class CategoriaController extends Controller
         ]);
 
         $categoria->delete();
-        
+
         return redirect('/categorias')->with('message', 'Categoria eliminado correctamente');
     }
 }

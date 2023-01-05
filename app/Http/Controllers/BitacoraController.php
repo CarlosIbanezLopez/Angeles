@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
-
+use App\Models\Bitacora;
 class BitacoraController extends Controller
 {
     /**
@@ -12,7 +12,8 @@ class BitacoraController extends Controller
      */
     public function index()
     {
-        //
+        $bitacoras = Bitacora::paginate(8);
+        return view('bitacoras.index', compact('bitacoras'));
     }
 
     /**
